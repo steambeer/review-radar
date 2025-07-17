@@ -1,0 +1,79 @@
+// --- Review Radar worker -----------------------------------------------
+// Runs every 5 min (configured in fly.toml’s schedule) to:
+// 1. Fetch new ResearchHub posts
+// 2. Find subscribers who care (by hub / editor / keyword)
+// 3. Push a notification via Neynar
+
+import fetch from 'node-fetch';
+import { createClient } from '@supabase/supabase-js';
+import { NeynarAPIClient } from '@neynar/nodejs-sdk';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
+const neynar = new NeynarAPIClient(process.env.NEYNAR_KEY);
+
+// Poll 5 min back so overlapping runs don’t miss anything
+const POLL_WINDOW_MIN = 5;
+const RH_GRAPHQL = 'https://www.researchhub.com/graphql';
+
+export default {
+  async scheduled() {
+    const since = Date.now() - POLL_WINDOW_MIN * 60_000;
+
+    // 1) Grab recent posts
+    const rhQuery = `
+      query {
+        posts(since: ${Math.floor(since / 1000)}) {
+          id
+          title
+          abstract
+          hub
+          editor
+        }
+      }
+    `;
+    const rhResp = await fetch(RH_GRAPHQL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: rhQuery }),
+    });
+    const { data } = await rhResp.json();
+    if (!data?.posts?.length) return console.log('No new posts');
+
+    for (const post of data.posts) {
+      // 2) Who subscribes to this hub/editor/keyword?
+      const { data: rows, error } = await supabase
+        .from('user_prefs')
+        .select('fid,hubs,editors,keywords');
+
+      if (error) {
+        console.error('Supabase error', error);
+        continue;
+      }
+
+      const targets = rows
+        .filter((r) =>
+          (r.hubs || []).includes(post.hub) ||
+          (r.editors || []).includes(post.editor) ||
+          (r.keywords && post.title.toLowerCase().includes(r.keywords.toLowerCase()))
+        )
+        .map((r) => r.fid);
+
+      if (!targets.length) continue;
+
+      // 3) Push notification
+      await neynar.publishFrameNotifications({
+        targetFids: targets,
+        notification: {
+          title: post.title,
+          body: `${post.hub} • ${post.abstract.slice(0, 80)}…`,
+          target_url: `https://www.researchhub.com/paper/${post.id}`,
+        },
+      });
+
+      console.log(`Pushed "${post.title}" to ${targets.length} FIDs`);
+    }
+  },
+};

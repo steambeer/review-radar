@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@neynar/nodejs-sdk": "^3.26.0",
+    "@supabase/supabase-js": "^2.52.0"
+  }
+}
