@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react'; // 'useEffect' has been removed from this line
+import { useState, useEffect } from 'react';
 
 // --- TYPE DEFINITIONS ---
 interface InjectedSdk {
@@ -31,19 +31,32 @@ export default function ClientPage() {
   const [editors, setEditors] = useState<string>('scott-nelson');
   const [keywords, setKW] = useState<string>('');
   const [status, setStatus] = useState<string>('');
-  const [isReady, setIsReady] = useState(false);
+
+  // --- THIS IS THE FIX ---
+  // This hook now waits for the SDK to be available before calling ready().
+  useEffect(() => {
+    let attempts = 0;
+    const maxAttempts = 50; // Try for 5 seconds (50 * 100ms)
+
+    const checkForSdk = () => {
+      const sdk = window.onchainkit?.sdk || window.farcaster?.sdk;
+      if (sdk?.actions?.ready) {
+        console.log('SDK found, calling ready()');
+        sdk.actions.ready();
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        setTimeout(checkForSdk, 100); // Check again in 100ms
+      } else {
+        console.error('SDK object not found after 5 seconds.');
+      }
+    };
+
+    checkForSdk();
+  }, []); // The empty array ensures this runs only once on mount
 
   async function savePrefs() {
     setStatus('Saving...');
     const fid = window.onchainkit?.sdk?.clientInfo?.clientFid || 999;
-
-    if (!isReady) {
-      const sdk = window.onchainkit?.sdk || window.farcaster?.sdk;
-      if (sdk?.actions?.ready) {
-        sdk.actions.ready();
-        setIsReady(true);
-      }
-    }
 
     try {
       const res = await fetch('/api/savePrefs', {
@@ -69,14 +82,6 @@ export default function ClientPage() {
   }
 
   function handleEnableNotifications() {
-    if (!isReady) {
-      const sdk = window.onchainkit?.sdk || window.farcaster?.sdk;
-      if (sdk?.actions?.ready) {
-        sdk.actions.ready();
-        setIsReady(true);
-      }
-    }
-
     if (window.farcaster?.addMiniApp) {
       setStatus('Please approve in the prompt to enable notifications...');
       window.farcaster.addMiniApp();
