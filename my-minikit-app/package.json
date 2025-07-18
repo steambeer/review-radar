@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev", // local Next.js dev server
+    "dev": "next dev",
     "build": "next build",
-    "start": "node index.js", // <-- Fly will call this
+    "start": "node index.js",
     "lint": "next lint"
   },
   "dependencies": {
