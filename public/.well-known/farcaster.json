@@ -1,0 +1,17 @@
+{
+    "frame": {
+        "version": "1",
+        "name": "Review Radar",
+        "subtitle": "Alerts for new ResearchHub papers",
+        "description": "Get notified in Coinbase Wallet when new posts match your hubs, editors, or keywords.",
+        "iconUrl": "https://rhearn.netlify.app/icon.png", // add or swap any 256 × 256 png
+        "homeUrl": "https://rhearn.netlify.app",
+        "primaryCategory": "utility",
+        "tags": [
+            "science",
+            "reviews"
+        ],
+        "webhookUrl": "https://radar-worker.fly.dev/hook",
+        "client_id": "5f2e19da-47f6-428c-b4f7-c46520e405d2" // from Neynar
+    }
+}
