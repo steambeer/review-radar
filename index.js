@@ -6,7 +6,8 @@
 
 import fetch from 'node-fetch';
 import { createClient } from '@supabase/supabase-js';
-import { NeynarAPIClient } from '@neynar/nodejs-sdk';
+import neynarPkg from '@neynar/nodejs-sdk';
+const { NeynarAPIClient } = neynarPkg;
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
