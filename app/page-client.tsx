@@ -2,7 +2,18 @@
 
 import { useState, useEffect } from 'react';
 
-// Define a type for the Farcaster object that gets injected into the window
+// --- TYPE DEFINITIONS TO FIX THE ERRORS ---
+
+// Define a minimal type for the part of OnchainKit we are using
+interface OnchainKit {
+  sdk: {
+    clientInfo?: {
+      clientFid?: number | null;
+    };
+  };
+}
+
+// Define a type for the Farcaster object
 interface Farcaster {
   addMiniApp: () => void;
   sdk?: {
@@ -12,35 +23,30 @@ interface Farcaster {
   };
 }
 
-// Tell TypeScript that our window object might have these properties
+// Update the global Window type without using 'any'
 declare global {
   interface Window {
     farcaster?: Farcaster;
-    onchainkit?: any; // Keep onchainkit typed as 'any' for simplicity
+    onchainkit?: OnchainKit;
   }
 }
 
-// Note: The component is named ClientPage to match the import in `app/page.tsx`
 export default function ClientPage() {
   const [hubs, setHubs] = useState<string>('Drug Discovery');
   const [editors, setEditors] = useState<string>('scott-nelson');
   const [keywords, setKW] = useState<string>('');
-  const [status, setStatus] = useState<string>(''); // For user feedback
+  const [status, setStatus] = useState<string>('');
 
-  // This hook runs once when the app loads to signal it's ready
   useEffect(() => {
     const sdk = window.onchainkit?.sdk || window.farcaster?.sdk;
-    if (sdk && sdk.actions && sdk.actions.ready) {
+    if (sdk?.actions?.ready) {
       sdk.actions.ready();
     }
-  }, []); // The empty array ensures this runs only once on mount
+  }, []);
 
-  // This function saves the user's topic preferences
   async function savePrefs() {
     setStatus('Saving...');
-    const fid =
-      (typeof window !== 'undefined' &&
-        window.onchainkit?.sdk?.clientInfo?.clientFid) || 999;
+    const fid = window.onchainkit?.sdk?.clientInfo?.clientFid || 999;
 
     try {
       const res = await fetch('/api/savePrefs', {
@@ -56,14 +62,17 @@ export default function ClientPage() {
 
       if (!res.ok) throw new Error(await res.text());
       setStatus('✅ Preferences saved!');
-    } catch (err: any) {
-      setStatus('❌ Error saving preferences: ' + err.message);
+    } catch (err) { // Using type-safe error handling instead of 'any'
+      if (err instanceof Error) {
+        setStatus('❌ Error saving preferences: ' + err.message);
+      } else {
+        setStatus('❌ An unknown error occurred.');
+      }
     }
   }
 
-  // This function handles the notification opt-in flow
   function handleEnableNotifications() {
-    if (window.farcaster && window.farcaster.addMiniApp) {
+    if (window.farcaster?.addMiniApp) {
       setStatus('Please approve in the prompt to enable notifications...');
       window.farcaster.addMiniApp();
     } else {
