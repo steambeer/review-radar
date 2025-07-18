@@ -1,0 +1,6 @@
+# This rule tells Netlify to redirect requests for the manifest
+# to the official Farcaster hosted URL.
+[[redirects]]
+  from = "/.well-known/farcaster.json"
+  to = "https://api.farcaster.xyz/miniapps/hosted-manifest/01981ecc-50ae-c3df-cabb-fa3c8ca0b5d5"
+  status = 307 # Temporary Redirect
