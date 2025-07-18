@@ -1,5 +1,5 @@
-// --- Review Radar worker -----------------------------------------------
-// Runs every 5 min (configured in fly.toml’s schedule) to:
+// --- Review Radar worker -----------------------------------------------
+// Runs every 5 min (configured in fly.toml’s schedule) to:
 // 1. Fetch new ResearchHub posts
 // 2. Find subscribers who care (by hub / editor / keyword)
 // 3. Push a notification via Neynar
@@ -9,7 +9,15 @@ import { createClient } from '@supabase/supabase-js';
 // Use createRequire to load the CJS module directly
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const { NeynarAPIClient, Configuration } = require('@neynar/nodejs-sdk');
+
+// 1) Load the raw module
+const neynarModule = require('@neynar/nodejs-sdk');
+
+// 2) Debug: print exactly what keys it exports
+console.log('⏱️ Neynar module exports:', Object.keys(neynarModule));
+
+// 3) Destructure whatever you need (you’ll adjust these names once we see the real keys)
+const { NeynarAPIClient, Configuration } = neynarModule;
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -21,7 +29,7 @@ const supabase = createClient(
 const neynarConfig = new Configuration({ apiKey: process.env.NEYNAR_KEY });
 const neynar = new NeynarAPIClient(neynarConfig);
 
-// Poll 5 min back so overlapping runs don’t miss anything
+// Poll 5 min back so overlapping runs don’t miss anything
 const POLL_WINDOW_MIN = 5;
 const RH_GRAPHQL = 'https://www.researchhub.com/graphql';
 
