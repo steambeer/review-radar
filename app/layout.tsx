@@ -1,18 +1,12 @@
-// In app/layout.tsx
 import "./theme.css";
 import "@coinbase/onchainkit/styles.css";
-import type { Metadata, Viewport } from "next";
+import type { Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 
 export const viewport: Viewport = {
     width: "device-width",
     initialScale: 1,
-};
-
-export const metadata: Metadata = {
-    title: "RH Notifier", // Changed to the new name
-    description: "Get notified about new ResearchHub papers.",
 };
 
 export default function RootLayout({
@@ -22,6 +16,25 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
+            <head>
+                <title>RH Notifier</title>
+                <meta
+                    name="description"
+                    content="Get notified about new ResearchHub papers."
+                />
+                {/* Farcaster Embed Meta Tags */}
+                <meta property="fc:frame" content="vNext" />
+                <meta
+                    property="fc:frame:image"
+                    content="https://rhearn.netlify.app/logo.png"
+                />
+                <meta property="fc:frame:button:1" content="Launch RH Notifier" />
+                <meta property="fc:frame:button:1:action" content="link" />
+                <meta
+                    property="fc:frame:button:1:target"
+                    content="https://rhearn.netlify.app"
+                />
+            </head>
             <body className="bg-background">
                 <Providers>{children}</Providers>
             </body>
