@@ -2,32 +2,31 @@
 
 import { useState, useEffect } from 'react';
 
-// --- TYPE DEFINITIONS TO FIX THE ERRORS ---
+// --- UPDATED TYPE DEFINITIONS TO FIX THE ERROR ---
 
-// Define a minimal type for the part of OnchainKit we are using
-interface OnchainKit {
-  sdk: {
-    clientInfo?: {
-      clientFid?: number | null;
-    };
+// A more flexible SDK type that can contain all the properties we need
+interface InjectedSdk {
+  clientInfo?: {
+    clientFid?: number | null;
+  };
+  actions?: {
+    ready: () => void;
   };
 }
 
-// Define a type for the Farcaster object
+// An interface for the Farcaster-specific functions
 interface Farcaster {
   addMiniApp: () => void;
-  sdk?: {
-    actions: {
-      ready: () => void;
-    };
-  };
+  sdk?: InjectedSdk;
 }
 
-// Update the global Window type without using 'any'
+// Update the global Window type to use our improved definitions
 declare global {
   interface Window {
     farcaster?: Farcaster;
-    onchainkit?: OnchainKit;
+    onchainkit?: { // OnchainKit just contains an SDK object
+      sdk: InjectedSdk;
+    };
   }
 }
 
@@ -38,6 +37,7 @@ export default function ClientPage() {
   const [status, setStatus] = useState<string>('');
 
   useEffect(() => {
+    // This code now works because the type of 'sdk' is consistently InjectedSdk
     const sdk = window.onchainkit?.sdk || window.farcaster?.sdk;
     if (sdk?.actions?.ready) {
       sdk.actions.ready();
@@ -62,7 +62,7 @@ export default function ClientPage() {
 
       if (!res.ok) throw new Error(await res.text());
       setStatus('✅ Preferences saved!');
-    } catch (err) { // Using type-safe error handling instead of 'any'
+    } catch (err) {
       if (err instanceof Error) {
         setStatus('❌ Error saving preferences: ' + err.message);
       } else {
