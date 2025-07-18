@@ -3,6 +3,19 @@
 
 import { useState } from 'react';
 
+// Define a type for the Farcaster object injected into the window
+interface Farcaster {
+  addMiniApp: () => void;
+}
+
+// Tell TypeScript that our window object can have a 'farcaster' property
+declare global {
+  interface Window {
+    farcaster?: Farcaster;
+    onchainkit?: any; // Keep onchainkit typed as 'any' for simplicity
+  }
+}
+
 export default function Home() {
   const [hubs, setHubs] = useState<string>('Drug Discovery');
   const [editors, setEditors] = useState<string>('scott-nelson');
@@ -14,16 +27,15 @@ export default function Home() {
     setStatus('Saving...');
     const fid =
       (typeof window !== 'undefined' &&
-        (window as any)?.onchainkit?.sdk?.clientInfo?.clientFid) || 999;
+        window.onchainkit?.sdk?.clientInfo?.clientFid) || 999;
 
     try {
-      // NOTE: This requires a backend API route at /api/savePrefs
       const res = await fetch('/api/savePrefs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fid,
-          hubs: hubs.split(',').map(h => h.trim()), // Trim whitespace
+          hubs: hubs.split(',').map(h => h.trim()),
           editors: editors.split(',').map(e => e.trim()),
           keywords,
         }),
@@ -36,53 +48,68 @@ export default function Home() {
     }
   }
 
-  // ⬇⬇⬇ NEW FUNCTION ⬇⬇⬇
   // This function handles the notification opt-in flow.
   function handleEnableNotifications() {
     if (window.farcaster && window.farcaster.addMiniApp) {
       setStatus('Please approve in the prompt to enable notifications...');
-      // This function prompts the user to add the Mini App and approve notifications.
-      // If they approve, the client will call your backend webhook.
       window.farcaster.addMiniApp();
     } else {
       alert('This feature is only available within a Farcaster-enabled app.');
     }
   }
 
+  // Shared style objects for cleaner JSX
+  const inputStyle = {
+    display: 'block',
+    width: '100%',
+    padding: 8,
+    marginTop: 4,
+    border: '1px solid #ccc',
+    borderRadius: 4,
+  };
+
+  const buttonStyle = {
+    flex: 1,
+    backgroundColor: '#0052ff',
+    color: 'white',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: 6,
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  };
+
   return (
-    <main style={{ maxWidth: 480, margin: '0 auto', padding: 24 }}>
+    <main style={{ maxWidth: 480, margin: '0 auto', padding: 24, fontFamily: '-apple-system, sans-serif' }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16 }}>
         Review Radar Settings
       </h1>
 
-      {/* --- Form fields for hubs, editors, keywords (no changes here) --- */}
       <label style={{ display: 'block', marginBottom: 16 }}>
         Hubs (comma-separated)
-        <input value={hubs} onChange={(e) => setHubs(e.target.value)} style={{ ...}} />
+        <input value={hubs} onChange={(e) => setHubs(e.target.value)} style={inputStyle} />
       </label>
+
       <label style={{ display: 'block', marginBottom: 16 }}>
         Editors (comma-separated)
-        <input value={editors} onChange={(e) => setEditors(e.target.value)} style={{ ...}} />
+        <input value={editors} onChange={(e) => setEditors(e.target.value)} style={inputStyle} />
       </label>
+
       <label style={{ display: 'block', marginBottom: 24 }}>
         Keywords (optional)
-        <input value={keywords} onChange={(e) => setKW(e.target.value)} style={{ ...}} />
+        <input value={keywords} onChange={(e) => setKW(e.target.value)} placeholder="e.g. CRISPR, macrolide" style={inputStyle} />
       </label>
-      {/* --- End of form fields --- */}
 
       <div style={{ display: 'flex', gap: '1rem' }}>
-        {/* Save button */}
-        <button onClick={savePrefs} style={{ ...}}>
+        <button onClick={savePrefs} style={buttonStyle}>
           Save Preferences
         </button>
 
-        {/* ⬇⬇⬇ NEW BUTTON ⬇⬇⬇ */}
-        <button onClick={handleEnableNotifications} style={{ ...}}>
+        <button onClick={handleEnableNotifications} style={buttonStyle}>
           Enable Notifications
         </button>
       </div>
 
-      {/* feedback */}
       {status && <p style={{ marginTop: 16 }}>{status}</p>}
     </main>
   );
