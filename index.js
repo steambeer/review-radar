@@ -6,10 +6,10 @@
 
 import fetch from 'node-fetch';
 import { createClient } from '@supabase/supabase-js';
-// Pull in the CJS module and unwrap any default wrapper
-import neynarPkg from '@neynar/nodejs-sdk';
-const neynarModule = neynarPkg.default ?? neynarPkg;
-const { NeynarAPIClient, Configuration } = neynarModule;
+// Use createRequire to load the CJS module directly
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { NeynarAPIClient, Configuration } = require('@neynar/nodejs-sdk');
 
 // Initialize Supabase client
 const supabase = createClient(
