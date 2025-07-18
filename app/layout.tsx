@@ -1,3 +1,4 @@
+// In app/layout.tsx
 import "./theme.css";
 import "@coinbase/onchainkit/styles.css";
 import type { Viewport } from "next";
@@ -12,7 +13,7 @@ export const viewport: Viewport = {
 export default function RootLayout({
     children,
 }: Readonly<{
-    children: React.ReactNode;
+    children: React.Node;
 }>) {
     return (
         <html lang="en">
@@ -22,7 +23,7 @@ export default function RootLayout({
                     name="description"
                     content="Get notified about new ResearchHub papers."
                 />
-                {/* Farcaster Embed Meta Tags */}
+                {/* CRITICAL FARCASTER META TAGS */}
                 <meta property="fc:frame" content="vNext" />
                 <meta
                     property="fc:frame:image"
