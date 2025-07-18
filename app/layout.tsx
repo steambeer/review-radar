@@ -1,34 +1,35 @@
-// In app/layout.tsx
+// The final, correct layout for the Mini App
 
-// A minimal layout for debugging
+// We can bring back the original imports
+import "./theme.css";
+import "@coinbase/onchainkit/styles.css";
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+import { Providers } from "./providers";
+
+// The viewport setting is good to keep
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+};
+
+// We can add a simple title and description for regular browsers
+export const metadata: Metadata = {
+    title: "RH Notifier",
+    description: "Get notified about new ResearchHub papers.",
+};
+
+// This is the RootLayout component from your original file
 export default function RootLayout({
     children,
-}: {
+}: Readonly<{
     children: React.ReactNode;
-}) {
+}>) {
     return (
         <html lang="en">
-            <head>
-                <title>RH Notifier</title>
-                <meta property="fc:frame" content="vNext" />
-                <meta
-                    property="fc:frame:image"
-                    content="https://rhearn.netlify.app/logo.png"
-                />
-
-                {/* --- THIS IS THE FIX --- */}
-                {/* Using a standard 'link' button is more reliable. */}
-                {/* The client will see the manifest at the target URL and launch the Mini App. */}
-                <meta property="fc:frame:button:1" content="Launch RH Notifier" />
-                <meta property="fc:frame:button:1:action" content="link" />
-                <meta
-                    property="fc:frame:button:1:target"
-                    content="https://rhearn.netlify.app"
-                />
-                {/* --- END OF FIX --- */}
-
-            </head>
-            <body>{children}</body>
+            <body className="bg-background">
+                <Providers>{children}</Providers>
+            </body>
         </html>
     );
 }
