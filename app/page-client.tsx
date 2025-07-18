@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 // --- TYPE DEFINITIONS ---
 interface InjectedSdk {
@@ -23,33 +23,6 @@ export default function ClientPage() {
   const [editors, setEditors] = useState<string>('scott-nelson');
   const [keywords, setKW] = useState<string>('');
   const [status, setStatus] = useState<string>('');
-
-  // This hook adds debugging to check for the SDK when the component loads.
-  useEffect(() => {
-    console.log('--- RH Notifier Debug ---');
-    console.log('Component mounted. Starting to look for SDK...');
-
-    let attempts = 0;
-    const maxAttempts = 50; // Try for 5 seconds
-
-    const checkForSdk = () => {
-      const sdk = window.onchainkit?.sdk || window.farcaster?.sdk;
-
-      if (sdk?.actions?.ready) {
-        console.log('✅ SUCCESS: SDK with .actions.ready() found!', sdk);
-        sdk.actions.ready();
-      } else if (attempts < maxAttempts) {
-        attempts++;
-        setTimeout(checkForSdk, 100);
-      } else {
-        console.error('❌ FAILURE: SDK with .actions.ready() not found after 5 seconds.');
-        console.log('Final window.onchainkit object:', window.onchainkit);
-        console.log('Final window.farcaster object:', window.farcaster);
-      }
-    };
-
-    checkForSdk();
-  }, []);
 
   async function savePrefs() {
     setStatus('Saving...');
@@ -87,25 +60,8 @@ export default function ClientPage() {
     }
   }
 
-  const inputStyle = {
-    display: 'block',
-    width: '100%',
-    padding: 8,
-    marginTop: 4,
-    border: '1px solid #ccc',
-    borderRadius: 4,
-  };
-
-  const buttonStyle = {
-    flex: 1,
-    backgroundColor: '#0052ff',
-    color: 'white',
-    border: 'none',
-    padding: '10px 20px',
-    borderRadius: 6,
-    cursor: 'pointer',
-    fontWeight: 'bold',
-  };
+  const inputStyle = { /* Your styles here */ };
+  const buttonStyle = { /* Your styles here */ };
 
   return (
     <main style={{ maxWidth: 480, margin: '0 auto', padding: 24, fontFamily: '-apple-system, sans-serif' }}>
