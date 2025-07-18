@@ -1,4 +1,3 @@
-// In app/layout.tsx
 import "./theme.css";
 import "@coinbase/onchainkit/styles.css";
 import type { Viewport } from "next";
@@ -13,7 +12,7 @@ export const viewport: Viewport = {
 export default function RootLayout({
     children,
 }: Readonly<{
-    children: React.Node;
+    children: React.ReactNode; // This line has been corrected
 }>) {
     return (
         <html lang="en">
@@ -27,13 +26,13 @@ export default function RootLayout({
                 <meta property="fc:frame" content="vNext" />
                 <meta
                     property="fc:frame:image"
-                    content="https://rhearn.netlify.app/logo.png"
+                    content="https://rhearn-demo.netlify.app/logo.png"
                 />
                 <meta property="fc:frame:button:1" content="Launch RH Notifier" />
                 <meta property="fc:frame:button:1:action" content="link" />
                 <meta
                     property="fc:frame:button:1:target"
-                    content="https://rhearn.netlify.app"
+                    content="https://rhearn-demo.netlify.app"
                 />
             </head>
             <body className="bg-background">
