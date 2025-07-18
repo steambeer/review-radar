@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-// --- UPDATED TYPE DEFINITIONS TO FIX THE ERROR ---
-
-// A more flexible SDK type that can contain all the properties we need
+// A flexible SDK type that can contain all the properties we need
 interface InjectedSdk {
   clientInfo?: {
     clientFid?: number | null;
@@ -24,7 +22,7 @@ interface Farcaster {
 declare global {
   interface Window {
     farcaster?: Farcaster;
-    onchainkit?: { // OnchainKit just contains an SDK object
+    onchainkit?: {
       sdk: InjectedSdk;
     };
   }
@@ -35,18 +33,23 @@ export default function ClientPage() {
   const [editors, setEditors] = useState<string>('scott-nelson');
   const [keywords, setKW] = useState<string>('');
   const [status, setStatus] = useState<string>('');
+  const [isReady, setIsReady] = useState(false); // State to track if ready signal has been sent
 
-  useEffect(() => {
-    // This code now works because the type of 'sdk' is consistently InjectedSdk
-    const sdk = window.onchainkit?.sdk || window.farcaster?.sdk;
-    if (sdk?.actions?.ready) {
-      sdk.actions.ready();
-    }
-  }, []);
-
+  // This function saves the user's topic preferences
   async function savePrefs() {
     setStatus('Saving...');
     const fid = window.onchainkit?.sdk?.clientInfo?.clientFid || 999;
+
+    // --- THIS IS THE FIX ---
+    // Signal ready only after we have the FID and are about to take an action.
+    if (!isReady) {
+      const sdk = window.onchainkit?.sdk || window.farcaster?.sdk;
+      if (sdk?.actions?.ready) {
+        sdk.actions.ready();
+        setIsReady(true); // Ensure we only send the signal once
+      }
+    }
+    // --- END OF FIX ---
 
     try {
       const res = await fetch('/api/savePrefs', {
@@ -71,7 +74,17 @@ export default function ClientPage() {
     }
   }
 
+  // This function handles the notification opt-in flow
   function handleEnableNotifications() {
+    // Also signal ready here, in case the user clicks this button first.
+    if (!isReady) {
+      const sdk = window.onchainkit?.sdk || window.farcaster?.sdk;
+      if (sdk?.actions?.ready) {
+        sdk.actions.ready();
+        setIsReady(true);
+      }
+    }
+
     if (window.farcaster?.addMiniApp) {
       setStatus('Please approve in the prompt to enable notifications...');
       window.farcaster.addMiniApp();
