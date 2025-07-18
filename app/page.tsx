@@ -1,9 +1,7 @@
-// A minimal page for debugging
+// In app/page.tsx
+import ClientPage from './page-client';
+
+// The page component that renders the interactive client part
 export default function Page() {
-    return (
-        <div>
-            <h1>Minimal Test Page</h1>
-            <p>This is a test to validate the Farcaster embed.</p>
-        </div>
-    );
+    return <ClientPage />;
 }

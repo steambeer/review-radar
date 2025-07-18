@@ -1,14 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-// Define a type for the Farcaster object injected into the window
+// Define a type for the Farcaster object that gets injected into the window
 interface Farcaster {
   addMiniApp: () => void;
+  sdk?: {
+    actions: {
+      ready: () => void;
+    };
+  };
 }
 
-// Tell TypeScript that our window object can have a 'farcaster' property
+// Tell TypeScript that our window object might have these properties
 declare global {
   interface Window {
     farcaster?: Farcaster;
@@ -16,13 +20,22 @@ declare global {
   }
 }
 
-export default function Home() {
+// Note: The component is named ClientPage to match the import in `app/page.tsx`
+export default function ClientPage() {
   const [hubs, setHubs] = useState<string>('Drug Discovery');
   const [editors, setEditors] = useState<string>('scott-nelson');
   const [keywords, setKW] = useState<string>('');
-  const [status, setStatus] = useState<string>(''); // feedback text
+  const [status, setStatus] = useState<string>(''); // For user feedback
 
-  // This function saves the user's topic preferences.
+  // This hook runs once when the app loads to signal it's ready
+  useEffect(() => {
+    const sdk = window.onchainkit?.sdk || window.farcaster?.sdk;
+    if (sdk && sdk.actions && sdk.actions.ready) {
+      sdk.actions.ready();
+    }
+  }, []); // The empty array ensures this runs only once on mount
+
+  // This function saves the user's topic preferences
   async function savePrefs() {
     setStatus('Saving...');
     const fid =
@@ -35,8 +48,8 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fid,
-          hubs: hubs.split(',').map(h => h.trim()),
-          editors: editors.split(',').map(e => e.trim()),
+          hubs: hubs.split(',').map((h) => h.trim()),
+          editors: editors.split(',').map((e) => e.trim()),
           keywords,
         }),
       });
@@ -48,7 +61,7 @@ export default function Home() {
     }
   }
 
-  // This function handles the notification opt-in flow.
+  // This function handles the notification opt-in flow
   function handleEnableNotifications() {
     if (window.farcaster && window.farcaster.addMiniApp) {
       setStatus('Please approve in the prompt to enable notifications...');
@@ -82,7 +95,7 @@ export default function Home() {
   return (
     <main style={{ maxWidth: 480, margin: '0 auto', padding: 24, fontFamily: '-apple-system, sans-serif' }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16 }}>
-        Review Radar Settings
+        RH Notifier Settings
       </h1>
 
       <label style={{ display: 'block', marginBottom: 16 }}>
@@ -110,7 +123,7 @@ export default function Home() {
         </button>
       </div>
 
-      {status && <p style={{ marginTop: 16 }}>{status}</p>}
+      {status && <p style={{ marginTop: 16, color: '#333' }}>{status}</p>}
     </main>
   );
 }
