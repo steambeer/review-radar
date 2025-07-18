@@ -7,15 +7,19 @@
 import fetch from 'node-fetch';
 import { createClient } from '@supabase/supabase-js';
 import neynarPkg from '@neynar/nodejs-sdk';
-const { NeynarAPIClient } = neynarPkg;
+const { NeynarAPIClient, Configuration } = neynarPkg;
 
+// Initialize Supabase client
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
 );
-const neynar = new NeynarAPIClient(process.env.NEYNAR_KEY);
 
-// Poll 5 min back so overlapping runs don’t miss anything
+// Build a Neynar configuration and client
+const neynarConfig = new Configuration({ apiKey: process.env.NEYNAR_KEY });
+const neynar = new NeynarAPIClient(neynarConfig);
+
+// Poll 5 min back so overlapping runs don’t miss anything
 const POLL_WINDOW_MIN = 5;
 const RH_GRAPHQL = 'https://www.researchhub.com/graphql';
 
@@ -41,7 +45,10 @@ export default {
       body: JSON.stringify({ query: rhQuery }),
     });
     const { data } = await rhResp.json();
-    if (!data?.posts?.length) return console.log('No new posts');
+    if (!data?.posts?.length) {
+      console.log('No new posts');
+      return;
+    }
 
     for (const post of data.posts) {
       // 2) Who subscribes to this hub/editor/keyword?
@@ -64,17 +71,20 @@ export default {
 
       if (!targets.length) continue;
 
-      // 3) Push notification
-      await neynar.publishFrameNotifications({
-        targetFids: targets,
-        notification: {
-          title: post.title,
-          body: `${post.hub} • ${post.abstract.slice(0, 80)}…`,
-          target_url: `https://www.researchhub.com/paper/${post.id}`,
-        },
-      });
-
-      console.log(`Pushed "${post.title}" to ${targets.length} FIDs`);
+      // 3) Push notification via Neynar
+      try {
+        await neynar.publishFrameNotifications({
+          targetFids: targets,
+          notification: {
+            title: post.title,
+            body: `${post.hub} • ${post.abstract.slice(0, 80)}…`,
+            target_url: `https://www.researchhub.com/paper/${post.id}`,
+          },
+        });
+        console.log(`Pushed "${post.title}" to ${targets.length} FIDs`);
+      } catch (pushErr) {
+        console.error('Neynar push error', pushErr);
+      }
     }
   },
 };
