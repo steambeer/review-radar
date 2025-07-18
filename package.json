@@ -2,6 +2,7 @@
   "name": "my-minikit-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -18,7 +19,9 @@
     "react": "^18",
     "react-dom": "^18",
     "viem": "^2.27.2",
-    "wagmi": "^2.14.11"
+    "wagmi": "^2.14.11",
+    "@neynar/nodejs-sdk": "^0.4.0",
+    "node-fetch": "^3"
   },
   "devDependencies": {
     "@types/node": "^20",
